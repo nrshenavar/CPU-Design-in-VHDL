@@ -8,7 +8,7 @@ end benchmark;
 architecture behavior of benchmark is
 
     -- Component declaration for the Unit Under Test (UUT)
-    component test1
+    component ALU
         Port (
             A : in  STD_LOGIC_VECTOR (31 downto 0);
             B : in  STD_LOGIC_VECTOR (31 downto 0);
@@ -30,7 +30,7 @@ architecture behavior of benchmark is
 begin
 
     -- Instantiate the Unit Under Test (UUT)
-    uut: test1 port map (
+    uut: ALU port map (
         A => A,
         B => B,
         Dout => Dout,

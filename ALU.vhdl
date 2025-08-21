@@ -4,7 +4,7 @@
 -- 
 -- Create Date:    11:40:38 02/26/2024 
 -- Design Name: 
--- Module Name:    test1 - Behavioral 
+-- Module Name:    ALU - Behavioral 
 -- Project Name: 
 -- Target Devices: 
 -- Tool versions: 
@@ -21,16 +21,16 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-entity test1 is
+entity ALU is
     Port ( A : in  STD_LOGIC_VECTOR (31 downto 0);
            B : in  STD_LOGIC_VECTOR (31 downto 0);
            Dout : buffer  STD_LOGIC_VECTOR (31 downto 0);
            Cin : in STD_LOGIC;
            zero : out  STD_LOGIC;
            Opcode : in  STD_LOGIC_VECTOR (3 downto 0));
-end test1;
+end ALU;
 
-architecture Behavioral of test1 is
+architecture Behavioral of ALU is
 
 component and_mud 
     port ( A : in  STD_LOGIC_VECTOR (31 downto 0);
