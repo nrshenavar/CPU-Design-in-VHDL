@@ -1,64 +1,56 @@
--- Testbench for CPU-Design-in-VHDL
--- This testbench drives the main processor, loads mem_input, 
--- and writes mem_output as described in the assignment.
--- Put your encoded instructions (8-bit per line, four lines per instruction) 
--- inside mem_input before simulation.
+-- tb_main.vhdl
+-- Testbench for controller.vhdl
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
 
 entity tb_main is
 end tb_main;
 
-architecture behavior of tb_main is
+architecture sim of tb_main is
+  -- Clock period
+  constant CLK_PERIOD : time := 10 ns;
 
-    -- Component Declaration for the Unit Under Test (UUT)
-    component main
-        Port (
-            clk   : in  STD_LOGIC;
-            reset : in  STD_LOGIC
-        );
-    end component;
-
-    -- Clock and reset signals
-    signal clk   : STD_LOGIC := '0';
-    signal reset : STD_LOGIC := '1';
-
-    -- Clock period definition
-    constant clk_period : time := 10 ns;
+  -- Signals
+  signal clk   : std_logic := '0';
+  signal reset : std_logic := '0';
 
 begin
+  --------------------------------------------------------------------
+  -- Instantiate DUT (controller is top-level)
+  --------------------------------------------------------------------
+  UUT : entity work.controller
+    port map (
+      CLK  => clk,
+      RST  => reset
+      -- no more ports if controller is self-contained
+    );
 
-    -- Instantiate the Unit Under Test (UUT)
-    uut: main
-        Port map (
-            clk   => clk,
-            reset => reset
-        );
+  --------------------------------------------------------------------
+  -- Clock generation
+  --------------------------------------------------------------------
+  clk_process : process
+  begin
+    while true loop
+      clk <= '0'; wait for CLK_PERIOD/2;
+      clk <= '1'; wait for CLK_PERIOD/2;
+    end loop;
+  end process;
 
-    -- Clock process definitions
-    clk_process :process
-    begin
-        clk <= '0';
-        wait for clk_period/2;
-        clk <= '1';
-        wait for clk_period/2;
-    end process;
+  --------------------------------------------------------------------
+  -- Stimulus
+  --------------------------------------------------------------------
+  stim_proc : process
+  begin
+    -- Reset active
+    reset <= '1';
+    wait for 2*CLK_PERIOD;
+    reset <= '0';
 
-    -- Stimulus process
-    stim_proc: process
-    begin
-        -- hold reset state for 50 ns.
-        reset <= '1';
-        wait for 50 ns;  
-        reset <= '0';
+    -- Run processor long enough to execute program
+    wait for 2000 ns;
 
-        -- run long enough to execute all instructions
-        wait for 2000 ns;  
+    assert false report "Simulation finished." severity failure;
+  end process;
 
-        -- stop simulation
-        assert false report "Simulation finished." severity failure;
-    end process;
-
-end behavior;
+end sim;
