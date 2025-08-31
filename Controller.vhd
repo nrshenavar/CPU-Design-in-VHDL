@@ -125,9 +125,11 @@ begin
                 ALUSrcB   <= "00";
                 CASE FUNCT3 IS
                     WHEN "000" =>  -- ADD/SUB
-                        -- You may need to check FUNCT7 for SUB, but for simplicity:
-                        ALUOp <= "0010"; -- ADD
-                        -- If you want to distinguish SUB, add a check for FUNCT7
+                        IF FUNCT67 = "0100000" THEN
+                            ALUOp <= "0110"; -- SUB
+                        ELSE
+                            ALUOp <= "0010"; -- ADD
+                        END IF;
                     WHEN "111" => 
                         ALUOp <= "0000"; -- AND
                     WHEN "110" => 
