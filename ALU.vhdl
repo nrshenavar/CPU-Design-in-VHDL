@@ -88,18 +88,20 @@ begin
     sub_result <= std_logic_vector(temp_diff(31 downto 0));
 end process;
 
+
 -- Output multiplexer
 with opcode select
-    temp_result <= and_out    when "0000",  -- AND
-                   or_out     when "0001",  -- OR  
-                   add_result when "0010",  -- ADD
-                   sub_result when "0110",  -- SUB
+    temp_result <= and_out    when "0000",  -- AND (and, andi)
+                   or_out     when "0001",  -- OR  (or, ori)
+                   add_result when "0010",  -- ADD (add, lw, sw, addi)
+                   sub_result when "0110",  -- SUB (sub, beq)
                    (others => '0') when others;
 
 -- Assign output
 Dout <= temp_result;
 
 -- Zero flag: set when all bits of output are '0'
+-- Used for BEQ: if zero='1', branch is taken
 zero <= '1' when Dout = x"00000000" else '0';
 
 end Behavioral;

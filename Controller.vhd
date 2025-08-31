@@ -23,55 +23,139 @@ entity Controlerl is
 			  CLK : in STD_LOGIC);
 end Controlerl;
 
+-- ...existing code...
+
 architecture Behavioral of Controlerl is
-	TYPE STATE IS (SETUP,S0,S1,S2,S3,S4,S5,S6,Termination);--You can add new states based on your desing.
-	SIGNAL CURRENT_STATE, NEXT_STATE : STATE := SETUP;
+    TYPE STATE IS (SETUP,S0,S1,S2,S3,S4,S5,S6,Termination);
+    SIGNAL CURRENT_STATE, NEXT_STATE : STATE := SETUP;
+
+    -- Define opcode constants (replace with your actual values)
+    constant OPCODE_LW  : STD_LOGIC_VECTOR(6 downto 0) := "0000011";
+    constant OPCODE_SW  : STD_LOGIC_VECTOR(6 downto 0) := "0100011";
+    constant OPCODE_BEQ : STD_LOGIC_VECTOR(6 downto 0) := "1100011";
+    constant OPCODE_R   : STD_LOGIC_VECTOR(6 downto 0) := "0110011";
+
 begin
-	p1 : PROCESS(CLK) BEGIN
-		IF CLK'EVENT and CLK = '1' THEN
-			CURRENT_STATE <= NEXT_STATE;
-		END IF;
-	END PROCESS;
-	
-	p2 : PROCESS(CURRENT_STATE) BEGIN
-		CASE CURRENT_STATE IS
-			WHEN SETUP =>
-				LoadFromFile <= '1';
-				SaveToFile <= '0';
-				next_state <= S0;
-			WHEN Termination =>
-				SaveToFile <= '1';
-				LoadFromFile <= '0';
-				--- Your code starts from here --
-				
-				
-			WHEN S0 =>
-				
-			WHEN S1 =>
-			  
-			  IF OPCODE = BEQ THEN
-			  
-			  ELSIF OPCODE = SW THEN
-			  
-			  ELSIF OPCODE = LW THEN 
-			  
-			  ELSIF OPCODE = R THEN
-			  
-			  ELSE
-					NEXT_STATE <= Termination;
-			  END IF;
-			WHEN S2 =>
-			
-			WHEN S3 =>
+    p1 : PROCESS(CLK) BEGIN
+        IF CLK'EVENT and CLK = '1' THEN
+            CURRENT_STATE <= NEXT_STATE;
+        END IF;
+    END PROCESS;
 
-			WHEN S4 =>
+    p2 : PROCESS(CURRENT_STATE, OPCODE, FUNCT3) BEGIN
+        -- Default values for all signals
+        PCWriteCond <= '0';
+        PCWrite     <= '0';
+        IorD        <= "0";
+        MemRead     <= '0';
+        MemWrite    <= '0';
+        MemtoReg    <= "0";
+        IRWrite     <= '0';
+        RegWrite    <= '0';
+        ALUSrcA     <= "0";
+        ALUSrcB     <= "00";
+        PCSource    <= "0";
+        ALUOp       <= "0000";
+        LoadFromFile<= '0';
+        SaveToFile  <= '0';
+        NEXT_STATE  <= CURRENT_STATE;
 
-			WHEN S5 =>
+        CASE CURRENT_STATE IS
+            WHEN SETUP =>
+                LoadFromFile <= '1';
+                SaveToFile   <= '0';
+                NEXT_STATE   <= S0;
 
-			WHEN S6 =>
-			
-		END CASE;
-	END PROCESS;
+            WHEN Termination =>
+                SaveToFile   <= '1';
+                LoadFromFile <= '0';
+
+            WHEN S0 =>
+                -- Instruction Fetch
+                MemRead   <= '1';
+                IRWrite   <= '1';
+                PCWrite   <= '1';
+                ALUSrcA   <= "0";
+                ALUSrcB   <= "01"; -- PC + 4
+                ALUOp     <= "0000"; -- ADD
+                PCSource  <= "0";
+                NEXT_STATE<= S1;
+
+            WHEN S1 =>
+                -- Instruction Decode
+                ALUSrcA   <= "0";
+                ALUSrcB   <= "11"; -- Immediate
+                ALUOp     <= "0000";
+                IF OPCODE = OPCODE_BEQ THEN
+                    NEXT_STATE <= S3;
+                ELSIF OPCODE = OPCODE_SW THEN
+                    NEXT_STATE <= S2;
+                ELSIF OPCODE = OPCODE_LW THEN
+                    NEXT_STATE <= S2;
+                ELSIF OPCODE = OPCODE_R THEN
+                    NEXT_STATE <= S4;
+                ELSE
+                    NEXT_STATE <= Termination;
+                END IF;
+
+            WHEN S2 =>
+                -- Memory Address Calculation for LW/SW
+                ALUSrcA   <= "1";
+                ALUSrcB   <= "10"; -- Immediate
+                ALUOp     <= "0000"; -- ADD
+                IF OPCODE = OPCODE_LW THEN
+                    NEXT_STATE <= S5;
+                ELSIF OPCODE = OPCODE_SW THEN
+                    NEXT_STATE <= S6;
+                END IF;
+
+            WHEN S3 =>
+                -- Branch (BEQ)
+                ALUSrcA      <= "1";
+                ALUSrcB      <= "00";
+                ALUOp        <= "0110"; -- SUB for BEQ
+                PCSource     <= "1";
+                PCWriteCond  <= '1';
+                NEXT_STATE   <= S0;
+
+
+            WHEN S4 =>
+                -- R-type (ADD, SUB, AND, OR)
+                ALUSrcA   <= "1";
+                ALUSrcB   <= "00";
+                CASE FUNCT3 IS
+                    WHEN "000" =>  -- ADD/SUB
+                        -- You may need to check FUNCT7 for SUB, but for simplicity:
+                        ALUOp <= "0010"; -- ADD
+                        -- If you want to distinguish SUB, add a check for FUNCT7
+                    WHEN "111" => 
+                        ALUOp <= "0000"; -- AND
+                    WHEN "110" => 
+                        ALUOp <= "0001"; -- OR
+                    WHEN OTHERS => 
+                        ALUOp <= "0010"; -- Default to ADD
+                END CASE;
+                NEXT_STATE <= S5;
+
+
+
+            WHEN S5 =>
+                -- Write-back for LW and R-type
+                IF OPCODE = OPCODE_LW THEN
+                    RegWrite  <= '1';
+                    MemtoReg  <= "1";
+                ELSIF OPCODE = OPCODE_R THEN
+                    RegWrite  <= '1';
+                    MemtoReg  <= "0";
+                END IF;
+                NEXT_STATE <= S0;
+
+            WHEN S6 =>
+                -- SW: Memory Write
+                MemWrite   <= '1';
+                NEXT_STATE <= S0;
+
+        END CASE;
+    END PROCESS;
 
 end Behavioral;
-
