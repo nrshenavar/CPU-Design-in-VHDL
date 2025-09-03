@@ -2,7 +2,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use work.TOP_PACKAGE.all;
 
-entity Controlerl is
+entity controller is
     Port ( OPCODE : in  STD_LOGIC_VECTOR (6 downto 0);
 			  FUNCT67 : in  STD_LOGIC_VECTOR (6 downto 0);
 			  FUNCT3 : in STD_LOGIC_VECTOR (2 downto 0);
@@ -21,11 +21,11 @@ entity Controlerl is
 			  LoadFromFile  : out  STD_LOGIC;
            SaveToFile    : out  STD_LOGIC;
 			  CLK : in STD_LOGIC);
-end Controlerl;
+end controller;
 
 -- ...existing code...
 
-architecture Behavioral of Controlerl is
+architecture Behavioral of controller is
     TYPE STATE IS (SETUP,S0,S1,S2,S3,S4,S5,S6,Termination);
     SIGNAL CURRENT_STATE, NEXT_STATE : STATE := SETUP;
 

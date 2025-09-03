@@ -1,4 +1,4 @@
--- filepath: c:\Users\ASUS\Documents\GitHub\CPU-Design-in-VHDL\tb_cpu.vhdl
+-- filepath: c:\Users\ASUS\Documents\GitHub\CPU-Design-in-VHDL\tb_CPU.vhdl
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -8,11 +8,9 @@ end tb_CPU;
 
 architecture Behavioral of tb_CPU is
 
-    -- DUT signals
     signal CLK   : STD_LOGIC := '0';
     signal RESET : STD_LOGIC := '0';
 
-    -- Instantiate the CPU
     component CPU
         Port (
             CLK   : in  STD_LOGIC;
@@ -22,7 +20,6 @@ architecture Behavioral of tb_CPU is
 
 begin
 
-    -- Instantiate DUT
     UUT: CPU
         port map (
             CLK   => CLK,
@@ -49,7 +46,10 @@ begin
         RESET <= '0';
 
         -- Wait for enough cycles for CPU to process instructions
-        wait for 1000 ns;
+        wait for 2000 ns; -- Increase if needed for your program
+
+        -- Print message to simulator console
+        report "Simulation finished. Please check mem_output.txt for results.";
 
         -- End simulation
         wait;

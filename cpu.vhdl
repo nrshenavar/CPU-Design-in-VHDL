@@ -51,23 +51,23 @@ architecture Structural of CPU is
         Port (
             A      : in  STD_LOGIC_VECTOR(31 downto 0);
             B      : in  STD_LOGIC_VECTOR(31 downto 0);
-            ALUOp  : in  STD_LOGIC_VECTOR(3 downto 0);
-            Result : out STD_LOGIC_VECTOR(31 downto 0);
-            Zero   : out STD_LOGIC
+            Dout   : buffer STD_LOGIC_VECTOR(31 downto 0);
+            Cin    : in STD_LOGIC;
+            zero   : out STD_LOGIC;
+            Opcode : in STD_LOGIC_VECTOR(3 downto 0)
         );
     end component;
 
     component RegisterBank
         Port (
-            CLK        : in  STD_LOGIC;
-            RESET      : in  STD_LOGIC;
-            ReadReg1   : in  STD_LOGIC_VECTOR(4 downto 0);
-            ReadReg2   : in  STD_LOGIC_VECTOR(4 downto 0);
-            WriteReg   : in  STD_LOGIC_VECTOR(4 downto 0);
-            WriteData  : in  STD_LOGIC_VECTOR(31 downto 0);
-            RegWrite   : in  STD_LOGIC;
-            ReadData1  : out STD_LOGIC_VECTOR(31 downto 0);
-            ReadData2  : out STD_LOGIC_VECTOR(31 downto 0)
+            clk           : in  STD_LOGIC;
+            RegWrite      : in  STD_LOGIC;
+            ReadRegister1 : in  STD_LOGIC_VECTOR(4 downto 0);
+            ReadRegister2 : in  STD_LOGIC_VECTOR(4 downto 0);
+            WriteRegister : in  STD_LOGIC_VECTOR(4 downto 0);
+            WriteData     : in  STD_LOGIC_VECTOR(31 downto 0);
+            ReadData1     : out STD_LOGIC_VECTOR(31 downto 0);
+            ReadData2     : out STD_LOGIC_VECTOR(31 downto 0)
         );
     end component;
 
@@ -84,6 +84,7 @@ architecture Structural of CPU is
     signal RegWrite    : STD_LOGIC;
     signal ALUOp       : STD_LOGIC_VECTOR(3 downto 0);
     signal Zero        : STD_LOGIC;
+    signal ALUCin      : STD_LOGIC := '0'; -- Default carry-in
 
 begin
 
@@ -129,15 +130,14 @@ begin
     -- RegisterBank instance
     UUT_REG: RegisterBank
         port map (
-            CLK        => CLK,
-            RESET      => RESET,
-            ReadReg1   => Instruction(19 downto 15),
-            ReadReg2   => Instruction(24 downto 20),
-            WriteReg   => Instruction(11 downto 7),
-            WriteData  => ALUResult, -- or Memory output, depending on MemtoReg
-            RegWrite   => RegWrite,
-            ReadData1  => RegData1,
-            ReadData2  => RegData2
+            clk           => CLK,
+            RegWrite      => RegWrite,
+            ReadRegister1 => Instruction(19 downto 15),
+            ReadRegister2 => Instruction(24 downto 20),
+            WriteRegister => Instruction(11 downto 7),
+            WriteData     => ALUResult, -- or Memory output, depending on MemtoReg
+            ReadData1     => RegData1,
+            ReadData2     => RegData2
         );
 
     -- ALU instance
@@ -145,9 +145,10 @@ begin
         port map (
             A      => RegData1,
             B      => RegData2, -- or immediate, depending on ALUSrcB
-            ALUOp  => ALUOp,
-            Result => ALUResult,
-            Zero   => Zero
+            Dout   => ALUResult,
+            Cin    => ALUCin,
+            zero   => Zero,
+            Opcode => ALUOp
         );
 
     -- Simple PC logic (update on RESET or PCWrite)
