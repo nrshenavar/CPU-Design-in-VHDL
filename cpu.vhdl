@@ -118,13 +118,13 @@ begin
             ADDRESS_WIDTH => 32
         )
         port map (
-            Write_DATA   => RegData2,
-            Address      => PC,
+            Write_DATA   => RegData2,         -- Data to write to memory (for SW)
+            Address      => PC,               -- Address to read/write (for LW/SW)
             MEMRead      => MemRead,
             MEMWrite     => MemWrite,
             LoadFromFile => LoadFromFile,
             SaveToFile   => SaveToFile,
-            MEMData      => Instruction
+            MEMData      => Instruction       -- Instruction fetched from memory
         );
 
     -- RegisterBank instance
@@ -132,10 +132,10 @@ begin
         port map (
             clk           => CLK,
             RegWrite      => RegWrite,
-            ReadRegister1 => Instruction(19 downto 15),
-            ReadRegister2 => Instruction(24 downto 20),
-            WriteRegister => Instruction(11 downto 7),
-            WriteData     => ALUResult, -- or Memory output, depending on MemtoReg
+            ReadRegister1 => Instruction(19 downto 15), -- rs1
+            ReadRegister2 => Instruction(24 downto 20), -- rs2
+            WriteRegister => Instruction(11 downto 7),  -- rd
+            WriteData     => ALUResult,                 -- Always write ALU result (for ADD)
             ReadData1     => RegData1,
             ReadData2     => RegData2
         );
@@ -144,20 +144,20 @@ begin
     UUT_ALU: ALU
         port map (
             A      => RegData1,
-            B      => RegData2, -- or immediate, depending on ALUSrcB
+            B      => RegData2,
             Dout   => ALUResult,
             Cin    => ALUCin,
             zero   => Zero,
             Opcode => ALUOp
         );
 
-    -- Simple PC logic (update on RESET or PCWrite)
+    -- PC update logic: increment PC by 4 every clock cycle
     process(CLK, RESET)
     begin
         if RESET = '1' then
             PC <= (others => '0');
         elsif rising_edge(CLK) then
-            -- TODO: Add PC update logic using PCWrite and ALUResult
+            PC <= std_logic_vector(unsigned(PC) + 4);
         end if;
     end process;
 
